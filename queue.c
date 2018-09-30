@@ -114,7 +114,7 @@ bool q_insert_tail(queue_t *q, char *s)
 {
     /* You need to write the complete code for this function */
     /* Remember: It should operate in O(1) time */
-    
+
     if (q == NULL) {
         return false;
     }
@@ -136,12 +136,15 @@ bool q_insert_tail(queue_t *q, char *s)
     memcpy(newh->value, s, len);
     
     newh->next = NULL;
-    q->tail->next = newh;
-    q->tail = newh;
+    if (q->tail != NULL) {
+        q->tail->next = newh;
+    }
 
     if (q->head == NULL) {
         q->head = newh;
     }
+
+    q->tail = newh;
 
     q->q_size++;
     return true;
@@ -170,7 +173,7 @@ bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
     if (remove->value != NULL) {
         if (sp != NULL) {
             memset(sp, 0, bufsize);
-            strncpy(sp, remove->value, bufsize);
+            strncpy(sp, remove->value, bufsize-1);
         }
         free(remove->value);
         remove->value = NULL;
@@ -211,5 +214,20 @@ void q_reverse(queue_t *q)
     /* You need to write the code for this function */
     if (q == NULL || q->head == NULL) {
         return;
+    }
+
+    q->tail = q->head;
+    list_ele_t *left = q->head;
+    list_ele_t *right = NULL;
+    list_ele_t *_next = NULL;
+
+    while (left != NULL) {
+        _next = left->next;
+        if (_next == NULL) {
+            q->head = left;
+        }
+        left->next = right;
+        right = left;
+        left = _next;
     }
 }
