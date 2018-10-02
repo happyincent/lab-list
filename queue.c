@@ -77,47 +77,44 @@ void q_free(queue_t *q)
 bool q_insert_head(queue_t *q, char *s)
 {
     /* check if the q is NULL */
-    if (q == NULL) {
-        return false;
+    if (q != NULL) {
+        /* allocate space for the new list element */
+        list_ele_t *newh = malloc(sizeof(list_ele_t));
+
+        /* check if malloc returns NULL */
+        if (newh != NULL) {
+            /* allocate space for the string */
+            size_t len = strlen(s);
+            newh->value = malloc((len + 1) * sizeof(char));
+
+            /* check if malloc returns NULL */
+            if (newh->value != NULL) {
+                /* copy the string */
+                memcpy(newh->value, s, len);
+                *(newh->value + len) = '\0';
+
+                /* insert head */
+                newh->next = q->head;
+                q->head = newh;
+
+                /* check if tail exist */
+                if (q->tail == NULL) {
+                    q->tail = newh;
+                }
+
+                /* increase size with 1 */
+                ++(q->q_size);
+
+                return true;
+            }
+
+            /* free the new list element */
+            free(newh);
+            newh = NULL;
+        }
     }
 
-    /* allocate space for the new list element */
-    list_ele_t *newh = malloc(sizeof(list_ele_t));
-
-    /* check if malloc returns NULL */
-    if (newh == NULL) {
-        return false;
-    }
-
-    /* allocate space for the string */
-    size_t len = strlen(s);
-    newh->value = malloc((len + 1) * sizeof(char));
-
-    /* check if malloc returns NULL */
-    if (newh->value == NULL) {
-        /* free the new list element */
-        free(newh);
-        newh = NULL;
-        return false;
-    }
-
-    /* clear and set the string */
-    memset(newh->value, 0, len + 1);
-    memcpy(newh->value, s, len);
-
-    /* insert head */
-    newh->next = q->head;
-    q->head = newh;
-
-    /* check if tail exist */
-    if (q->tail == NULL) {
-        q->tail = newh;
-    }
-
-    /* increase size with 1 */
-    ++(q->q_size);
-
-    return true;
+    return false;
 }
 
 
@@ -130,53 +127,48 @@ bool q_insert_head(queue_t *q, char *s)
  */
 bool q_insert_tail(queue_t *q, char *s)
 {
-    /* Remember: It should operate in O(1) time */
-
     /* check if the q is NULL */
-    if (q == NULL) {
-        return false;
+    if (q != NULL) {
+        /* allocate space for the new list element */
+        list_ele_t *newh = malloc(sizeof(list_ele_t));
+
+        /* check if malloc returns NULL */
+        if (newh != NULL) {
+            /* allocate space for the string */
+            size_t len = strlen(s);
+            newh->value = malloc((len + 1) * sizeof(char));
+
+            /* check if malloc returns NULL */
+            if (newh->value != NULL) {
+                /* copy the string */
+                memcpy(newh->value, s, len);
+                *(newh->value + len) = '\0';
+
+                /* insert tail */
+                newh->next = NULL;
+                if (q->tail != NULL) {
+                    q->tail->next = newh;
+                }
+                q->tail = newh;
+
+                /* check if head exist */
+                if (q->head == NULL) {
+                    q->head = newh;
+                }
+
+                /* increase size with 1 */
+                ++(q->q_size);
+
+                return true;
+            }
+
+            /* free the new list element */
+            free(newh);
+            newh = NULL;
+        }
     }
 
-    /* allocate space for the new list element */
-    list_ele_t *newh = malloc(sizeof(list_ele_t));
-
-    /* check if malloc returns NULL */
-    if (newh == NULL) {
-        return false;
-    }
-
-    /* allocate space for the string */
-    size_t len = strlen(s);
-    newh->value = malloc((len + 1) * sizeof(char));
-
-    /* check if malloc returns NULL */
-    if (newh->value == NULL) {
-        /* free the new list element */
-        free(newh);
-        newh = NULL;
-        return false;
-    }
-
-    /* clear and set the string */
-    memset(newh->value, 0, len + 1);
-    memcpy(newh->value, s, len);
-
-    /* insert tail */
-    newh->next = NULL;
-    if (q->tail != NULL) {
-        q->tail->next = newh;
-    }
-    q->tail = newh;
-
-    /* check if head exist */
-    if (q->head == NULL) {
-        q->head = newh;
-    }
-
-    /* increase queue size with 1 */
-    ++(q->q_size);
-
-    return true;
+    return false;
 }
 
 /*
