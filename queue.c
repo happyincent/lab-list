@@ -95,6 +95,11 @@ bool q_insert_head(queue_t *q, char *s)
 
                 /* insert head */
                 newh->next = q->head;
+                newh->prev = NULL;
+
+                if (q->head != NULL) {
+                    q->head->prev = newh;
+                }
                 q->head = newh;
 
                 /* check if tail exist */
@@ -146,6 +151,8 @@ bool q_insert_tail(queue_t *q, char *s)
 
                 /* insert tail */
                 newh->next = NULL;
+                newh->prev = q->tail;
+
                 if (q->tail != NULL) {
                     q->tail->next = newh;
                 }
@@ -204,6 +211,9 @@ bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
     }
 
     /* remove and free the head element */
+    if (remove->next != NULL) {
+        remove->next->prev = NULL;
+    }
     q->head = remove->next;
     free(remove);
     remove = NULL;
@@ -238,19 +248,20 @@ void q_reverse(queue_t *q)
         return;
     }
 
-    /* iterate the queue to reverse each next pointer */
-    list_ele_t *left = q->head;
-    list_ele_t *right = NULL;
-    list_ele_t *tmp = NULL;
+    /* iterate the queue to reverse each node's next and prev */
+    list_ele_t *node = q->head;
+    list_ele_t *nxt, *prv;
 
-    q->tail = left;
+    q->tail = q->head;
 
-    while (left != NULL) {
-        tmp = left->next;
-        left->next = right;
-        right = left;
-        left = tmp;
+    while (node != NULL) {
+        nxt = node->next;
+        prv = node->prev;
+        node->prev = nxt;
+        node->next = prv;
+        prv = node;
+        node = node->prev;
     }
 
-    q->head = right;
+    q->head = prv;
 }
