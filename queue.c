@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "list.h"
 #include "harness.h"
 #include "queue.h"
 
@@ -32,9 +33,9 @@ queue_t *q_new()
     }
 
     /* clear allocated struct */
-    q->head = NULL;
-    q->tail = NULL;
-    q->q_size = 0;
+    memset(q, 0, sizeof(queue_t));
+
+    INIT_LIST_HEAD(&(q->q_head));
 
     return q;
 }
@@ -47,19 +48,19 @@ void q_free(queue_t *q)
         return;
     }
 
-    while (q->head) {
-        list_ele_t *remove = q->head;
-        q->head = q->head->next;
+    struct list_head *li = NULL, *lis = NULL;
+    list_ele_t *item;
 
-        /* freeing the strings */
-        if (remove->value != NULL) {
-            free(remove->value);
-            remove->value = NULL;
+    list_for_each_safe(li, lis, &(q->q_head))
+    {
+        item = list_entry(li, list_ele_t, list);
+        if (item->value != NULL) {
+            free(item->value);
+            item->value = NULL;
         }
-
-        /* freeing the list elements */
-        free(remove);
-        remove = NULL;
+        list_del(&(item->list));
+        free(item);
+        item = NULL;
     }
 
     /* Free queue structure */
@@ -76,50 +77,28 @@ void q_free(queue_t *q)
  */
 bool q_insert_head(queue_t *q, char *s)
 {
-    /* check if the q is NULL */
-    if (q != NULL) {
-        /* allocate space for the new list element */
-        list_ele_t *newh = malloc(sizeof(list_ele_t));
+    if (q == NULL)
+        return false;
 
-        /* check if malloc returns NULL */
-        if (newh != NULL) {
-            /* allocate space for the string */
-            size_t len = strlen(s);
-            newh->value = malloc((len + 1) * sizeof(char));
+    list_ele_t *item = malloc(sizeof(list_ele_t));
+    if (item == NULL)
+        return false;
+    memset(item, 0, sizeof(list_ele_t));
 
-            /* check if malloc returns NULL */
-            if (newh->value != NULL) {
-                /* copy the string */
-                memcpy(newh->value, s, len);
-                *(newh->value + len) = '\0';
-
-                /* insert head */
-                newh->next = q->head;
-                newh->prev = NULL;
-
-                if (q->head != NULL) {
-                    q->head->prev = newh;
-                }
-                q->head = newh;
-
-                /* check if tail exist */
-                if (q->tail == NULL) {
-                    q->tail = newh;
-                }
-
-                /* increase size with 1 */
-                ++(q->q_size);
-
-                return true;
-            }
-
-            /* free the new list element */
-            free(newh);
-            newh = NULL;
-        }
+    size_t len = strlen(s);
+    item->value = malloc((len + 1) * sizeof(char));
+    if (item->value == NULL) {
+        free(item);
+        item = NULL;
+        return false;
     }
+    memcpy(item->value, s, len);
+    *(item->value + len) = '\0';
 
-    return false;
+    list_add(&(item->list), &(q->q_head));
+    ++q->q_size;
+    // cppcheck-suppress memleak
+    return true;
 }
 
 
@@ -132,50 +111,28 @@ bool q_insert_head(queue_t *q, char *s)
  */
 bool q_insert_tail(queue_t *q, char *s)
 {
-    /* check if the q is NULL */
-    if (q != NULL) {
-        /* allocate space for the new list element */
-        list_ele_t *newh = malloc(sizeof(list_ele_t));
+    if (q == NULL)
+        return false;
 
-        /* check if malloc returns NULL */
-        if (newh != NULL) {
-            /* allocate space for the string */
-            size_t len = strlen(s);
-            newh->value = malloc((len + 1) * sizeof(char));
+    list_ele_t *item = malloc(sizeof(list_ele_t));
+    if (item == NULL)
+        return false;
+    memset(item, 0, sizeof(list_ele_t));
 
-            /* check if malloc returns NULL */
-            if (newh->value != NULL) {
-                /* copy the string */
-                memcpy(newh->value, s, len);
-                *(newh->value + len) = '\0';
-
-                /* insert tail */
-                newh->next = NULL;
-                newh->prev = q->tail;
-
-                if (q->tail != NULL) {
-                    q->tail->next = newh;
-                }
-                q->tail = newh;
-
-                /* check if head exist */
-                if (q->head == NULL) {
-                    q->head = newh;
-                }
-
-                /* increase size with 1 */
-                ++(q->q_size);
-
-                return true;
-            }
-
-            /* free the new list element */
-            free(newh);
-            newh = NULL;
-        }
+    size_t len = strlen(s);
+    item->value = malloc((len + 1) * sizeof(char));
+    if (item->value == NULL) {
+        free(item);
+        item = NULL;
+        return false;
     }
+    memcpy(item->value, s, len);
+    *(item->value + len) = '\0';
 
-    return false;
+    list_add_tail(&(item->list), &(q->q_head));
+    ++q->q_size;
+    // cppcheck-suppress memleak
+    return true;
 }
 
 /*
@@ -188,39 +145,25 @@ bool q_insert_tail(queue_t *q, char *s)
 */
 bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
 {
-    /* check if the q is NULL */
-    if (q == NULL) {
+    if (q == NULL || list_empty(&q->q_head))
         return false;
-    }
 
-    list_ele_t *remove = q->head;
+    list_ele_t *item = list_first_entry(&(q->q_head), list_ele_t, list);
 
-    /* check if the head element is NULL */
-    if (remove == NULL) {
-        return false;
-    }
-
-    /* copy the removed string to *sp */
-    if (remove->value != NULL) {
+    if (item->value != NULL) {
         if (sp != NULL) {
             memset(sp, 0, bufsize);
-            memcpy(sp, remove->value, bufsize - 1);
+            memcpy(sp, item->value, bufsize - 1);
         }
-        free(remove->value);
-        remove->value = NULL;
+        free(item->value);
+        item->value = NULL;
     }
 
-    /* remove and free the head element */
-    if (remove->next != NULL) {
-        remove->next->prev = NULL;
-    }
-    q->head = remove->next;
-    free(remove);
-    remove = NULL;
+    list_del(&(item->list));
+    free(item);
+    item = NULL;
 
-    /* decrease queue size with 1 */
-    --(q->q_size);
-
+    --q->q_size;
     return true;
 }
 
@@ -244,24 +187,19 @@ int q_size(queue_t *q)
 void q_reverse(queue_t *q)
 {
     /* check if q is NULL or empty */
-    if (q == NULL || q->head == NULL) {
+    if (q == NULL || list_empty(&q->q_head))
         return;
-    }
 
     /* iterate the queue to reverse each node's next and prev */
-    list_ele_t *node = q->head;
-    list_ele_t *nxt, *prv;
+    struct list_head *li = NULL, *lis = NULL, *tmp = &(q->q_head);
 
-    q->tail = q->head;
-
-    while (node != NULL) {
-        nxt = node->next;
-        prv = node->prev;
-        node->prev = nxt;
-        node->next = prv;
-        prv = node;
-        node = node->prev;
+    list_for_each_safe(li, lis, &(q->q_head))
+    {
+        li->prev = lis;
+        li->next = tmp;
+        tmp = li;
     }
 
-    q->head = prv;
+    q->q_head.prev = q->q_head.next;
+    q->q_head.next = tmp;
 }

@@ -1,7 +1,7 @@
 .PHONY: dep test clean
 
 CC = gcc
-CFLAGS = -O0 -g -Wall -Werror -std=gnu11
+CFLAGS = -O3 -g -Wall -Werror -std=gnu11
 GIT_HOOKS := .git/hooks/applied
 all: $(GIT_HOOKS) qtest
 
@@ -15,7 +15,7 @@ $(GIT_HOOKS):
 # qtest: qtest.c report.c console.c harness.c queue.o
 # 	$(CC) $(CFLAGS) -o qtest qtest.c report.c console.c harness.c queue.o
 
-queue.o: queue.c queue.h harness.h
+queue.o: queue.c queue.h harness.h list.h
 
 qtest: qtest.c report.c console.c harness.c queue.o
 
