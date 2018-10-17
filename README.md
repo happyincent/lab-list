@@ -48,3 +48,4 @@ Trace files
 
 
 ## [2018q3 Homework2 (lab0)](https://hackmd.io/s/HJ05Gfk9X)
+## [2018q3 Homework3 (list)](https://hackmd.io/s/Hy8VGz1jQ)
