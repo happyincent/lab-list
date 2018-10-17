@@ -77,28 +77,41 @@ void q_free(queue_t *q)
  */
 bool q_insert_head(queue_t *q, char *s)
 {
-    if (q == NULL)
-        return false;
+    /* check if the q is NULL */
+    if (q != NULL) {
+        /* allocate space for the new list element */
+        list_ele_t *item = malloc(sizeof(list_ele_t));
 
-    list_ele_t *item = malloc(sizeof(list_ele_t));
-    if (item == NULL)
-        return false;
-    memset(item, 0, sizeof(list_ele_t));
+        /* check if malloc returns NULL */
+        if (item != NULL) {
+            memset(item, 0, sizeof(list_ele_t));
 
-    size_t len = strlen(s);
-    item->value = malloc((len + 1) * sizeof(char));
-    if (item->value == NULL) {
-        free(item);
-        item = NULL;
-        return false;
+            /* allocate space for the string */
+            size_t len = strlen(s);
+            item->value = malloc((len + 1) * sizeof(char));
+
+            /* check if malloc returns NULL */
+            if (item->value != NULL) {
+                /* copy the string */
+                memcpy(item->value, s, len);
+                *(item->value + len) = '\0';
+
+                /* insert head */
+                list_add(&(item->list), &(q->q_head));
+
+                /* increase size with 1 */
+                ++q->q_size;
+
+                // cppcheck-suppress memleak
+                return true;
+            }
+
+            free(item);
+            item = NULL;
+        }
     }
-    memcpy(item->value, s, len);
-    *(item->value + len) = '\0';
 
-    list_add(&(item->list), &(q->q_head));
-    ++q->q_size;
-    // cppcheck-suppress memleak
-    return true;
+    return false;
 }
 
 
@@ -111,28 +124,41 @@ bool q_insert_head(queue_t *q, char *s)
  */
 bool q_insert_tail(queue_t *q, char *s)
 {
-    if (q == NULL)
-        return false;
+    /* check if the q is NULL */
+    if (q != NULL) {
+        /* allocate space for the new list element */
+        list_ele_t *item = malloc(sizeof(list_ele_t));
 
-    list_ele_t *item = malloc(sizeof(list_ele_t));
-    if (item == NULL)
-        return false;
-    memset(item, 0, sizeof(list_ele_t));
+        /* check if malloc returns NULL */
+        if (item != NULL) {
+            memset(item, 0, sizeof(list_ele_t));
 
-    size_t len = strlen(s);
-    item->value = malloc((len + 1) * sizeof(char));
-    if (item->value == NULL) {
-        free(item);
-        item = NULL;
-        return false;
+            /* allocate space for the string */
+            size_t len = strlen(s);
+            item->value = malloc((len + 1) * sizeof(char));
+
+            /* check if malloc returns NULL */
+            if (item->value != NULL) {
+                /* copy the string */
+                memcpy(item->value, s, len);
+                *(item->value + len) = '\0';
+
+                /* insert tail */
+                list_add_tail(&(item->list), &(q->q_head));
+
+                /* increase size with 1 */
+                ++q->q_size;
+
+                // cppcheck-suppress memleak
+                return true;
+            }
+
+            free(item);
+            item = NULL;
+        }
     }
-    memcpy(item->value, s, len);
-    *(item->value + len) = '\0';
 
-    list_add_tail(&(item->list), &(q->q_head));
-    ++q->q_size;
-    // cppcheck-suppress memleak
-    return true;
+    return false;
 }
 
 /*
